@@ -285,9 +285,9 @@ export default function Home() {
     try {
       await navigator.clipboard.writeText(text);
       // alert('已成功复制到剪贴板');
-      toast.success(`链接复制成功`);
+      toast.success(`Đã sao chép liên kết`);
     } catch (err) {
-      toast.error("链接复制失败");
+      toast.error("Lỗi sao chép liên kết");
     }
   };
 
@@ -296,9 +296,9 @@ export default function Home() {
     const values = Array.from(codeElements).map((code) => code.textContent);
     try {
       await navigator.clipboard.writeText(values.join("\n"));
-      toast.success(`链接复制成功`);
+      toast.success(`Đã sao chép liên kết`);
     } catch (error) {
-      toast.error(`链接复制失败\n${error}`);
+      toast.error(`Lỗi sao chép liên kết \n${error}`);
     }
   };
 
@@ -461,23 +461,23 @@ export default function Home() {
     if (!isAuthapi) {
       return (
         <Link href="/login">
-          <LoginButton>登录</LoginButton>
+          <LoginButton>Login</LoginButton>
         </Link>
       );
     }
     switch (Loginuser) {
       case "user":
-        return <LoginButton onClick={handleSignOut}>登出</LoginButton>;
-      case "admin":
-        return (
-          <Link href="/admin">
-            <LoginButton>管理</LoginButton>
-          </Link>
-        );
+        return <LoginButton onClick={handleSignOut}>Thoát</LoginButton>;
+      // case "admin":
+      //   return (
+      //     <Link href="/admin">
+      //       <LoginButton>Manage</LoginButton>
+      //     </Link>
+      //   );
       default:
         return (
           <Link href="/login">
-            <LoginButton>登录</LoginButton>
+            <LoginButton>Login</LoginButton>
           </Link>
         );
     }
@@ -623,7 +623,7 @@ export default function Home() {
           </div>
           <div className="md:col-span-5 col-span-8">
             <div className="w-full h-10 bg-slate-200 leading-10 px-4 text-center md:text-left">
-              Đã chọn {selectedFiles.length} 张，共{" "}
+              Đã chọn {selectedFiles.length} file，Dung lượng{" "}
               {getTotalSizeInMB(selectedFiles)} M
             </div>
           </div>
