@@ -136,7 +136,7 @@ export default function Home() {
     const filesToUpload = file ? [file] : selectedFiles;
 
     if (filesToUpload.length === 0) {
-      toast.error("请选择要上传的文件");
+      toast.error("Vui lòng chọn file trước khi tải lên");
       setUploading(false);
       return;
     }
@@ -189,34 +189,36 @@ export default function Home() {
             // 细化状态码处理
             switch (response.status) {
               case 400:
-                toast.error(`请求无效: ${errorMsg}`);
+                toast.error(`Invalid request: ${errorMsg}`);
                 break;
               case 403:
-                toast.error(`无权限访问资源: ${errorMsg}`);
+                toast.error(`No permission to access resource: ${errorMsg}`);
                 break;
               case 404:
-                toast.error(`资源未找到: ${errorMsg}`);
+                toast.error(`Resource not found: ${errorMsg}`);
                 break;
               case 500:
-                toast.error(`服务器错误: ${errorMsg}`);
+                toast.error(`Server error: ${errorMsg}`);
                 break;
               case 401:
-                toast.error(`未授权: ${errorMsg}`);
+                toast.error(`Unauthorized: ${errorMsg}`);
                 break;
               default:
-                toast.error(`上传 ${file.name} 图片时出错: ${errorMsg}`);
+                toast.error(
+                  `File ${file.name} gặp lỗi khi upload: ${errorMsg}`
+                );
             }
           }
         } catch (error) {
-          toast.error(`上传 ${file.name} 图片时出错`);
+          toast.error(`File ${file.name} upload không thành công`);
         }
       }
 
       setUploadedFilesNum(uploadedFilesNum + successCount);
-      toast.success(`已成功上传 ${successCount} 张图片`);
+      toast.success(`Đã upload thành công ${successCount} file`);
     } catch (error) {
-      console.error("上传过程中出现错误:", error);
-      toast.error("上传错误");
+      console.error("Có lỗi xảy ra:", error);
+      toast.error("Lỗi upload file");
     } finally {
       setUploading(false);
     }
@@ -500,24 +502,28 @@ export default function Home() {
               phút) <br></br>
               Đã lưu trữ tổng cộng{" "}
               <span className="text-cyan-600">{Total}</span> tệp <br></br>
-              IP của bạn：<span className="text-cyan-600">{IP}</span>
+              IP của bạn：<span className="text-cyan-600">{IP}</span> <br></br>
+              Các định dạng hỗ trợ{" "}
+              <span image className="text-cyan-600">
+                image/*, video/*, .zip, .tar, .gz, .rar, .7z, .xz, .bz2{" "}
+              </span>
             </div>
           </div>
           <div className="flex  flex-col sm:flex-col   md:w-auto lg:flex-row xl:flex-row  2xl:flex-row  mx-auto items-center  ">
             <span className=" text-lg sm:text-sm   md:text-sm lg:text-xl xl:text-xl  2xl:text-xl">
-              上传接口：
+              Máy chủ：
             </span>
             <select
               value={selectedOption} // 将选择框的值绑定到状态中的 selectedOption
               onChange={handleSelectChange} // 当选择框的值发生变化时触发 handleSelectChange 函数
               className="text-lg p-2 border  rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto  2xl:w-36"
             >
-              <option value="tg">TG(会失效)</option>
-              <option value="tgchannel">TG_Channel</option>
-              <option value="r2">R2</option>
+              {/* <option value="tg">TG(会失效)</option> */}
+              <option value="tgchannel">TG</option>
+              {/* <option value="r2">R2</option> */}
               <option value="vviptuangou">vviptuangou</option>
               <option value="58img">58img</option>
-              <option value="tencent">tencent</option>
+              {/* <option value="tencent">tencent</option> */}
             </select>
           </div>
         </div>
@@ -586,7 +592,8 @@ export default function Home() {
             {selectedFiles.length === 0 && (
               <div className="absolute -z-10 left-0 top-0 w-full h-full flex items-center justify-center">
                 <div className="text-gray-500">
-                  拖拽文件到这里或将屏幕截图复制并粘贴到此处上传
+                  Kéo và thả tệp vào đây hoặc sao chép và dán ảnh chụp màn hình
+                  vào đây để tải lên
                 </div>
               </div>
             )}
@@ -603,11 +610,12 @@ export default function Home() {
                 style={{ width: "20px", height: "20px" }}
                 className="mr-2"
               />
-              选择图片
+              Chọn file
             </label>
             <input
               id="file-upload"
               type="file"
+              accept="image/*,video/*,.zip,.tar,.gz,.rar,.7z,.xz,.bz2"
               className="hidden"
               onChange={handleFileChange}
               multiple
@@ -615,7 +623,7 @@ export default function Home() {
           </div>
           <div className="md:col-span-5 col-span-8">
             <div className="w-full h-10 bg-slate-200 leading-10 px-4 text-center md:text-left">
-              已选择 {selectedFiles.length} 张，共{" "}
+              Đã chọn {selectedFiles.length} 张，共{" "}
               {getTotalSizeInMB(selectedFiles)} M
             </div>
           </div>
@@ -629,7 +637,7 @@ export default function Home() {
                 style={{ width: "20px", height: "20px" }}
                 className="mr-2"
               />
-              清除
+              Xóa
             </div>
           </div>
           <div className="md:col-span-1 col-span-5">
@@ -646,7 +654,7 @@ export default function Home() {
                 style={{ width: "20px", height: "20px" }}
                 className="mr-2"
               />
-              上传
+              Tải lên
             </div>
           </div>
         </div>
