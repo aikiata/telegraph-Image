@@ -624,7 +624,7 @@ export default function Home() {
           <div className="md:col-span-5 col-span-8">
             <div className="w-full h-10 bg-slate-200 leading-10 px-4 text-center md:text-left">
               Đã chọn {selectedFiles.length} file，Dung lượng{" "}
-              {getTotalSizeInMB(selectedFiles)} M
+              {getTotalSizeInMB(selectedFiles)} MB
             </div>
           </div>
           <div className="md:col-span-1 col-span-3">
