@@ -489,7 +489,7 @@ export default function Home() {
         <nav className="flex justify-between items-center w-full max-w-4xl px-4">
           HOME
         </nav>
-        {renderButton()}
+        {/* {renderButton()} */}
       </header>
       <div className="mt-[60px] w-9/10 sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-2/3">
         <div className="flex flex-row">

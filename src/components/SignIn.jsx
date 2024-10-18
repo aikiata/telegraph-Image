@@ -5,13 +5,13 @@ import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 // import { useRouter } from 'next/navigation'
 export function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   // const router = useRouter()
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         redirect: false,
         username,
         password,
@@ -19,19 +19,21 @@ export function LoginPage() {
       // console.log(result);
       if (result?.error) {
         console.log(result.error);
-        toast.error("用户名或密码错误，请核对后在登陆！")
+        toast.error(
+          "The username or password is incorrect, please check before logging in! "
+        );
       } else {
         // 成功处理，比如重定向到一个受保护的页面
         // router.push("/admin")
-        console.log('Login successful!');
-        toast.success('登录成功，自动跳转到对应页面!')
+        console.log("Login successful!");
+        toast.success("Login successful!");
         // toast.error('Login successful!')
         setTimeout(() => {
           window.location.reload(); // 延迟3秒后刷新页面
         }, 1000);
       }
     } catch (error) {
-      console.log('Error during sign in:', error);
+      console.log("Error during sign in:", error);
     }
   };
 
@@ -44,7 +46,12 @@ export function LoginPage() {
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium leading-6 text-gray-900" htmlFor="username">Username</label>
+              <label
+                className="block text-sm font-medium leading-6 text-gray-900"
+                htmlFor="username"
+              >
+                Username
+              </label>
               <div className="mt-2">
                 <input
                   id="username"
@@ -56,7 +63,12 @@ export function LoginPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium leading-6 text-gray-900" htmlFor="password">Password</label>
+              <label
+                className="block text-sm font-medium leading-6 text-gray-900"
+                htmlFor="password"
+              >
+                Password
+              </label>
               <div className="mt-2">
                 <input
                   id="password"
@@ -70,12 +82,13 @@ export function LoginPage() {
             <button
               type="submit"
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-
-            >Login</button>
+            >
+              Login
+            </button>
           </form>
         </div>
       </div>
-      <ToastContainer/>
+      <ToastContainer />
     </div>
   );
 }
