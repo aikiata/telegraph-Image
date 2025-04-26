@@ -29,14 +29,14 @@ export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedFilesNum, setUploadedFilesNum] = useState(0);
-  const [selectedImage, setSelectedImage] = useState(null); // 添加状态用于跟踪选中的放大图片
+  const [selectedImage, setSelectedImage] = useState(null); // Thêm trạng thái để theo dõi hình ảnh được phóng to
   const [activeTab, setActiveTab] = useState("preview");
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState("");
   const [Total, setTotal] = useState("?");
-  const [selectedOption, setSelectedOption] = useState("tgchannel"); // 初始选择第一个选项
-  const [isAuthapi, setisAuthapi] = useState(false); // 初始选择第一个选项
-  const [Loginuser, setLoginuser] = useState(""); // 初始选择第一个选项
+  const [selectedOption, setSelectedOption] = useState("tgchannel"); // Giá trị chọn mặc định ban đầu
+  const [isAuthapi, setisAuthapi] = useState(false); // Giá trị chọn mặc định ban đầu
+  const [Loginuser, setLoginuser] = useState(""); // Giá trị chọn mặc định ban đầu
   const [boxType, setBoxtype] = useState("img");
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -63,7 +63,7 @@ export default function Home() {
       const data = await res.json();
       setIP(data.ip);
     } catch (error) {
-      console.error("请求出错:", error);
+      console.error("Lỗi yêu cầu:", error);
     }
   };
   const isAuth = async () => {
@@ -84,7 +84,7 @@ export default function Home() {
         setSelectedOption("58img");
       }
     } catch (error) {
-      console.error("请求出错:", error);
+      console.error("Lỗi yêu cầu:", error);
     }
   };
 
@@ -99,7 +99,7 @@ export default function Home() {
       const data = await res.json();
       setTotal(data.total);
     } catch (error) {
-      console.error("请求出错:", error);
+      console.error("Lỗi yêu cầu:", error);
     }
   };
 
@@ -108,7 +108,7 @@ export default function Home() {
     const filteredFiles = Array.from(newFiles).filter(
       (file) => !selectedFiles.find((selFile) => selFile.name === file.name)
     );
-    // 过滤掉已经在 uploadedImages 数组中存在的文件
+    // Lọc bỏ file đã tồn tại trong mảng uploadedImages
     const uniqueFiles = filteredFiles.filter(
       (file) => !uploadedImages.find((upImg) => upImg.name === file.name)
     );
@@ -127,30 +127,10 @@ export default function Home() {
       (acc, file) => acc + file.size,
       0
     );
-    return (totalSizeInBytes / (1024 * 1024)).toFixed(2); // 转换为MB并保留两位小数
+    return (totalSizeInBytes / (1024 * 1024)).toFixed(2); // Chuyển thành MB và giữ 2 chữ số thập phân
   };
 
   const handleUpload = async (file = null) => {
-    setUploading(true);
-
-    const filesToUpload = file ? [file] : selectedFiles;
-
-    if (filesToUpload.length === 0) {
-      toast.error("Vui lòng chọn file trước khi tải lên");
-      setUploading(false);
-      return;
-    }
-
-    const formFieldName = selectedOption === "tencent" ? "media" : "file";
-    let successCount = 0;
-
-    try {
-      for (const file of filesToUpload) {
-        // Kiểm tra nếu là video và lớn hơn 50MB thì không upload
-        if (file.type.startsWith("video/") && file.size > 50 * 1024 * 1024) {
-          toast.error(`Video ${file.name} vượt quá giới hạn 50MB, không thể tải lên.`);
-          continue;
-        }
     setUploading(true);
 
     const filesToUpload = file ? [file] : selectedFiles;
@@ -200,10 +180,10 @@ export default function Home() {
             let errorMsg;
             try {
               const errorData = await response.json();
-              errorMsg = errorData.message || `上传 ${file.name} 图片时出错`;
+              errorMsg = errorData.message || `Tải lên ${file.name} lỗi khi tải ảnh`;
             } catch (jsonError) {
               // 如果解析 JSON 失败，使用默认错误信息
-              errorMsg = `上传 ${file.name} 图片时发生未知错误`;
+              errorMsg = `Tải lên ${file.name} xảy ra lỗi không xác định khi tải ảnh`;
             }
 
             // 细化状态码处理
@@ -252,7 +232,7 @@ export default function Home() {
       if (item.kind === "file" && item.type.includes("image")) {
         const file = item.getAsFile();
         setSelectedFiles([...selectedFiles, file]);
-        break; // 只处理第一个文件
+        break; // Chỉ xử lý file đầu tiên
       }
     }
   };
@@ -279,7 +259,7 @@ export default function Home() {
     return `${rows * 100}px`;
   };
 
-  // 处理点击图片放大
+  // Xử lý sự kiện click vào hình để phóng to
   const handleImageClick = (index) => {
     if (selectedFiles[index].type.startsWith("image/")) {
       setBoxtype("img");
@@ -304,7 +284,7 @@ export default function Home() {
   const handleCopy = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-      // alert('已成功复制到剪贴板');
+      // alert('Đã sao chép thành công vào clipboard');
       toast.success(`Đã sao chép liên kết`);
     } catch (err) {
       toast.error("Lỗi sao chép liên kết");
@@ -352,7 +332,7 @@ export default function Home() {
         </video>
       );
     } else {
-      // 其他文件类型
+      // Các loại file khác
       return (
         <img
           key={`image-${index}`}
@@ -470,7 +450,7 @@ export default function Home() {
   };
 
   const handleSelectChange = (e) => {
-    setSelectedOption(e.target.value); // 更新选择框的值
+    setSelectedOption(e.target.value); // Cập nhật giá trị chọn trong select
   };
 
   const handleSignOut = () => {
@@ -535,7 +515,7 @@ export default function Home() {
             </span>
             <select
               value={selectedOption} // 将选择框的值绑定到状态中的 selectedOption
-              onChange={handleSelectChange} // 当选择框的值发生变化时触发 handleSelectChange 函数
+              onChange={handleSelectChange} // Kích hoạt khi thay đổi giá trị ô chọn
               className="text-lg p-2 border  rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto  2xl:w-36"
             >
               {/* <option value="tg">TG(会失效)</option> */}
@@ -552,7 +532,7 @@ export default function Home() {
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onPaste={handlePaste}
-          style={{ minHeight: calculateMinHeight() }} // 动态设置最小高度
+          style={{ minHeight: calculateMinHeight() }} // Tính toán chiều cao tối thiểu động
         >
           <div className="flex flex-wrap gap-3 min-h-[240px]">
             <LoadingOverlay loading={uploading} />
@@ -770,13 +750,13 @@ export default function Home() {
                 controls
               />
             ) : boxType === "other" ? (
-              // 这里可以渲染你想要的其他内容或组件
+              // Bạn có thể render nội dung hoặc component khác tại đây
               <div className="p-4 bg-white text-black rounded">
                 <p>Unsupported file type</p>
               </div>
             ) : (
-              // 你可以选择一个默认的内容或者返回 null
-              <div>未知类型</div>
+              // Bạn có thể chọn nội dung mặc định hoặc trả về null
+              <div>Loại không xác định</div>
             )}
           </div>
         </div>
