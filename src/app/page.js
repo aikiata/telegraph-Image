@@ -1,25 +1,19 @@
 "use client";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
-import {
-  faImages,
-  faTrashAlt,
-  faUpload,
-  faSearchPlus,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { ToastContainer } from "react-toastify";
-import { toast } from "react-toastify";
-import { useEffect } from "react";
-import Footer from "@/components/Footer";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faImages, faTrashAlt, faUpload, faSearchPlus, faFilePdf, faFileWord, faFileExcel } from "@fortawesome/free-solid-svg-icons";
+import { ToastContainer, toast } from "react-toastify";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import Footer from "@/components/Footer";
+import 'react-toastify/dist/ReactToastify.css';
 
 const LoginButton = ({ onClick, href, children }) => (
   <button
     onClick={onClick}
-    className="px-4 py-2 mx-2 w-28 sm:w-28 md:w-20 lg:w-16 xl:w-16 2xl:w-20 bg-blue-500 text-white rounded"
+    className="px-4 py-2 mx-2 w-28 bg-blue-500 text-white rounded"
   >
     {children}
   </button>
@@ -29,742 +23,310 @@ export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedFilesNum, setUploadedFilesNum] = useState(0);
-  const [selectedImage, setSelectedImage] = useState(null); // Thêm trạng thái để theo dõi hình ảnh được phóng to
-  const [activeTab, setActiveTab] = useState("preview");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [activeTab, setActiveTab] = useState("all");
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState("");
   const [Total, setTotal] = useState("?");
-  const [selectedOption, setSelectedOption] = useState("tgchannel"); // Giá trị chọn mặc định ban đầu
-  const [isAuthapi, setisAuthapi] = useState(false); // Giá trị chọn mặc định ban đầu
-  const [Loginuser, setLoginuser] = useState(""); // Giá trị chọn mặc định ban đầu
+  const [selectedOption, setSelectedOption] = useState("tgchannel");
+  const [isAuthapi, setisAuthapi] = useState(false);
+  const [Loginuser, setLoginuser] = useState("");
   const [boxType, setBoxtype] = useState("img");
+  const [dragging, setDragging] = useState(false);
+  const [selectedPdf, setSelectedPdf] = useState(null); // file pdf xem trước
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-
   const parentRef = useRef(null);
-
-  let headers = {
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-  };
-  useEffect(() => {
-    ip();
-    getTotal();
-    isAuth();
-  }, []);
-  const ip = async () => {
-    try {
-      const res = await fetch(`/api/ip`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await res.json();
-      setIP(data.ip);
-    } catch (error) {
-      console.error("Lỗi yêu cầu:", error);
-    }
-  };
-  const isAuth = async () => {
-    try {
-      const res = await fetch(`/api/enableauthapi/isauth`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setisAuthapi(true);
-        setLoginuser(data.role);
-      } else {
-        setisAuthapi(false);
-        setSelectedOption("58img");
-      }
-    } catch (error) {
-      console.error("Lỗi yêu cầu:", error);
-    }
-  };
-
-  const getTotal = async () => {
-    try {
-      const res = await fetch(`/api/total`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await res.json();
-      setTotal(data.total);
-    } catch (error) {
-      console.error("Lỗi yêu cầu:", error);
-    }
-  };
-
   const handleFileChange = (event) => {
-    const newFiles = event.target.files;
-    const filteredFiles = Array.from(newFiles).filter(
+    const newFiles = Array.from(event.target.files);
+    const filteredFiles = newFiles.filter(
       (file) => !selectedFiles.find((selFile) => selFile.name === file.name)
     );
-    // Lọc bỏ file đã tồn tại trong mảng uploadedImages
-    const uniqueFiles = filteredFiles.filter(
-      (file) => !uploadedImages.find((upImg) => upImg.name === file.name)
-    );
-
-    setSelectedFiles([...selectedFiles, ...uniqueFiles]);
+    setSelectedFiles([...selectedFiles, ...filteredFiles]);
   };
 
   const handleClear = () => {
     setSelectedFiles([]);
-    setUploadStatus("");
-    // setUploadedImages([]);
+    setUploadedImages([]);
+    setUploadedFilesNum(0);
   };
 
-  const getTotalSizeInMB = (files) => {
-    const totalSizeInBytes = Array.from(files).reduce(
-      (acc, file) => acc + file.size,
-      0
+  const handleDrop = (event) => {
+    event.preventDefault();
+    const files = Array.from(event.dataTransfer.files);
+    const filteredFiles = files.filter(
+      (file) => !selectedFiles.find((selFile) => selFile.name === file.name)
     );
-    return (totalSizeInBytes / (1024 * 1024)).toFixed(2); // Chuyển thành MB và giữ 2 chữ số thập phân
+    setSelectedFiles([...selectedFiles, ...filteredFiles]);
+    setDragging(false);
   };
 
-  const handleUpload = async (file = null) => {
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    setDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setDragging(false);
+  };
+
+  const handlePaste = (event) => {
+    const clipboardItems = event.clipboardData.items;
+    for (let i = 0; i < clipboardItems.length; i++) {
+      const item = clipboardItems[i];
+      if (item.kind === "file" && item.type.includes("image")) {
+        const file = item.getAsFile();
+        setSelectedFiles([...selectedFiles, file]);
+        break;
+      }
+    }
+  };
+
+  const handleUpload = async () => {
     setUploading(true);
-
-    const filesToUpload = file ? [file] : selectedFiles;
-
+    const filesToUpload = selectedFiles;
     if (filesToUpload.length === 0) {
       toast.error("Vui lòng chọn file trước khi tải lên");
       setUploading(false);
       return;
     }
 
-    const formFieldName = selectedOption === "tencent" ? "media" : "file";
     let successCount = 0;
 
     try {
       for (const file of filesToUpload) {
         const formData = new FormData();
+        formData.append("file", file);
 
-        formData.append(formFieldName, file);
+        const response = await fetch(`/api/upload`, {
+          method: "POST",
+          body: formData,
+        });
 
-        try {
-          const targetUrl =
-            selectedOption === "tgchannel" || selectedOption === "r2"
-              ? `/api/enableauthapi/${selectedOption}`
-              : `/api/${selectedOption}`;
+        if (response.ok) {
+          const result = await response.json();
+          file.url = result.url;
 
-          // const response = await fetch("https://img.131213.xyz/api/tencent", {
-          const response = await fetch(targetUrl, {
-            method: "POST",
-            body: formData,
-            headers: headers,
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            // console.log(result);
-
-            file.url = result.url;
-
-            // 更新 uploadedImages 和 selectedFiles
-            setUploadedImages((prevImages) => [...prevImages, file]);
-            setSelectedFiles((prevFiles) =>
-              prevFiles.filter((f) => f !== file)
-            );
-            successCount++;
-          } else {
-            // 尝试从响应中提取错误信息
-            let errorMsg;
-            try {
-              const errorData = await response.json();
-              errorMsg = errorData.message || `Tải lên ${file.name} lỗi khi tải ảnh`;
-            } catch (jsonError) {
-              // 如果解析 JSON 失败，使用默认错误信息
-              errorMsg = `Tải lên ${file.name} xảy ra lỗi không xác định khi tải ảnh`;
-            }
-
-            // 细化状态码处理
-            switch (response.status) {
-              case 400:
-                toast.error(`Invalid request: ${errorMsg}`);
-                break;
-              case 403:
-                toast.error(`No permission to access resource: ${errorMsg}`);
-                break;
-              case 404:
-                toast.error(`Resource not found: ${errorMsg}`);
-                break;
-              case 500:
-                toast.error(`Server error: ${errorMsg}`);
-                break;
-              case 401:
-                toast.error(`Unauthorized: ${errorMsg}`);
-                break;
-              default:
-                toast.error(
-                  `File ${file.name} gặp lỗi khi upload: ${errorMsg}`
-                );
-            }
-          }
-        } catch (error) {
-          toast.error(`File ${file.name} upload không thành công`);
+          setUploadedImages((prevImages) => [...prevImages, file]);
+          setSelectedFiles((prevFiles) => prevFiles.filter((f) => f !== file));
+          successCount++;
+        } else {
+          toast.error(`Lỗi upload file ${file.name}`);
         }
       }
 
       setUploadedFilesNum(uploadedFilesNum + successCount);
       toast.success(`Đã upload thành công ${successCount} file`);
     } catch (error) {
-      console.error("Có lỗi xảy ra:", error);
-      toast.error("Lỗi upload file");
+      toast.error("Có lỗi xảy ra khi upload");
     } finally {
       setUploading(false);
     }
   };
-
-  const handlePaste = (event) => {
-    const clipboardItems = event.clipboardData.items;
-
-    for (let i = 0; i < clipboardItems.length; i++) {
-      const item = clipboardItems[i];
-      if (item.kind === "file" && item.type.includes("image")) {
-        const file = item.getAsFile();
-        setSelectedFiles([...selectedFiles, file]);
-        break; // Chỉ xử lý file đầu tiên
-      }
-    }
-  };
-
-  const handleDrop = (event) => {
-    event.preventDefault();
-    const files = event.dataTransfer.files;
-
-    if (files.length > 0) {
-      const filteredFiles = Array.from(files).filter(
-        (file) => !selectedFiles.find((selFile) => selFile.name === file.name)
-      );
-      setSelectedFiles([...selectedFiles, ...filteredFiles]);
-    }
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
-  };
-
-  // 根据图片数量动态计算容器高度
-  const calculateMinHeight = () => {
-    const rows = Math.ceil(selectedFiles.length / 4);
-    return `${rows * 100}px`;
-  };
-
-  // Xử lý sự kiện click vào hình để phóng to
-  const handleImageClick = (index) => {
-    if (selectedFiles[index].type.startsWith("image/")) {
-      setBoxtype("img");
-    } else if (selectedFiles[index].type.startsWith("video/")) {
-      setBoxtype("video");
+  const handleImageClick = (file) => {
+    if (file.type.startsWith("application/pdf")) {
+      setSelectedPdf(URL.createObjectURL(file));
+    } else if (file.type.startsWith("image/")) {
+      setBoxType("img");
+      setSelectedImage(URL.createObjectURL(file));
+    } else if (file.type.startsWith("video/")) {
+      setBoxType("video");
+      setSelectedImage(URL.createObjectURL(file));
     } else {
-      setBoxtype("other");
+      setBoxType("other");
+      setSelectedImage(URL.createObjectURL(file));
     }
-
-    setSelectedImage(URL.createObjectURL(selectedFiles[index]));
   };
 
   const handleCloseImage = () => {
     setSelectedImage(null);
+    setSelectedPdf(null);
   };
 
-  const handleRemoveImage = (index) => {
-    const updatedFiles = selectedFiles.filter((_, idx) => idx !== index);
-    setSelectedFiles(updatedFiles);
-  };
+  const renderFilePreview = (file, index) => {
+    const fileType = file.type;
 
-  const handleCopy = async (text) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      // alert('Đã sao chép thành công vào clipboard');
-      toast.success(`Đã sao chép liên kết`);
-    } catch (err) {
-      toast.error("Lỗi sao chép liên kết");
-    }
-  };
-
-  const handleCopyCode = async () => {
-    const codeElements = parentRef.current.querySelectorAll("code");
-    const values = Array.from(codeElements).map((code) => code.textContent);
-    try {
-      await navigator.clipboard.writeText(values.join("\n"));
-      toast.success(`Đã sao chép liên kết`);
-    } catch (error) {
-      toast.error(`Lỗi sao chép liên kết \n${error}`);
-    }
-  };
-
-  const handlerenderImageClick = (imageUrl, type) => {
-    setBoxtype(type);
-    setSelectedImage(imageUrl);
-  };
-
-  const renderFile = (data, index) => {
-    const fileUrl = data.url;
-    if (data.type.startsWith("image/")) {
+    if (fileType.startsWith("image/")) {
       return (
         <img
-          key={`image-${index}`}
-          src={data.url}
-          alt={`Uploaded ${index}`}
-          className="object-cover w-36 h-40 m-2"
-          onClick={() => handlerenderImageClick(fileUrl, "img")}
+          key={index}
+          src={URL.createObjectURL(file)}
+          alt="preview"
+          className="object-cover w-36 h-40 m-2 rounded-md cursor-pointer"
+          onClick={() => handleImageClick(file)}
         />
       );
-    } else if (data.type.startsWith("video/")) {
+    } else if (fileType.startsWith("video/")) {
       return (
         <video
-          key={`video-${index}`}
-          src={data.url}
-          className="object-cover w-36 h-40 m-2"
+          key={index}
+          src={URL.createObjectURL(file)}
+          className="object-cover w-36 h-40 m-2 rounded-md cursor-pointer"
           controls
-          onClick={() => handlerenderImageClick(fileUrl, "video")}
-        >
-          Your browser does not support the video tag.
-        </video>
-      );
-    } else {
-      // Các loại file khác
-      return (
-        <img
-          key={`image-${index}`}
-          src={data.url}
-          alt={`Uploaded ${index}`}
-          className="object-cover w-36 h-40 m-2"
-          onClick={() => handlerenderImageClick(fileUrl, "other")}
+          onClick={() => handleImageClick(file)}
         />
       );
-    }
-  };
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case "preview":
-        return (
-          <div className=" flex flex-col ">
-            {uploadedImages.map((data, index) => (
-              <div
-                key={index}
-                className="m-2 rounded-2xl ring-offset-2 ring-2  ring-slate-100 flex flex-row "
-              >
-                {renderFile(data, index)}
-                <div className="flex flex-col justify-center w-4/5">
-                  {[
-                    { text: data.url, onClick: () => handleCopy(data.url) },
-                    {
-                      text: `![${data.name}](${data.url})`,
-                      onClick: () => handleCopy(`![${data.name}](${data.url})`),
-                    },
-                    {
-                      text: `<a href="${data.url}" target="_blank"><img src="${data.url}"></a>`,
-                      onClick: () =>
-                        handleCopy(
-                          `<a href="${data.url}" target="_blank"><img src="${data.url}"></a>`
-                        ),
-                    },
-                    {
-                      text: `[img]${data.url}[/img]`,
-                      onClick: () => handleCopy(`[img]${data.url}[/img]`),
-                    },
-                  ].map((item, i) => (
-                    <input
-                      key={`input-${i}`}
-                      readOnly
-                      value={item.text}
-                      onClick={item.onClick}
-                      className="px-3 my-1 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-800 focus:outline-none placeholder-gray-400"
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-      case "htmlLinks":
-        return (
-          <div
-            ref={parentRef}
-            className=" p-4 bg-slate-100  "
-            onClick={handleCopyCode}
-          >
-            {uploadedImages.map((data, index) => (
-              <div key={index} className="mb-2 ">
-                <code className=" w-2 break-all">{`<img src="${data.url}" alt="${data.name}" />`}</code>
-              </div>
-            ))}
-          </div>
-        );
-      case "markdownLinks":
-        return (
-          <div
-            ref={parentRef}
-            className=" p-4 bg-slate-100  "
-            onClick={handleCopyCode}
-          >
-            {uploadedImages.map((data, index) => (
-              <div key={index} className="mb-2">
-                <code className=" w-2 break-all">{`![${data.name}](${data.url})`}</code>
-              </div>
-            ))}
-          </div>
-        );
-      case "bbcodeLinks":
-        return (
-          <div
-            ref={parentRef}
-            className=" p-4 bg-slate-100  "
-            onClick={handleCopyCode}
-          >
-            {uploadedImages.map((data, index) => (
-              <div key={index} className="mb-2">
-                <code className=" w-2 break-all">{`[img]${data.url}[/img]`}</code>
-              </div>
-            ))}
-          </div>
-        );
-      case "viewLinks":
-        return (
-          <div
-            ref={parentRef}
-            className=" p-4 bg-slate-100  "
-            onClick={handleCopyCode}
-          >
-            {uploadedImages.map((data, index) => (
-              <div key={index} className="mb-2">
-                <code className=" w-2 break-all">{`${data.url}`}</code>
-              </div>
-            ))}
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const handleSelectChange = (e) => {
-    setSelectedOption(e.target.value); // Cập nhật giá trị chọn trong select
-  };
-
-  const handleSignOut = () => {
-    signOut({ callbackUrl: "/" });
-  };
-
-  const renderButton = () => {
-    if (!isAuthapi) {
+    } else if (fileType === "application/pdf") {
       return (
-        <Link href="/login">
-          <LoginButton>Login</LoginButton>
-        </Link>
+        <div
+          key={index}
+          className="w-36 h-40 m-2 bg-gray-200 flex items-center justify-center rounded-md cursor-pointer"
+          onClick={() => handleImageClick(file)}
+        >
+          <FontAwesomeIcon icon={faFilePdf} size="2x" />
+        </div>
+      );
+    } else if (fileType.includes("word")) {
+      return (
+        <div
+          key={index}
+          className="w-36 h-40 m-2 bg-gray-200 flex items-center justify-center rounded-md cursor-pointer"
+        >
+          <FontAwesomeIcon icon={faFileWord} size="2x" />
+        </div>
+      );
+    } else if (fileType.includes("excel")) {
+      return (
+        <div
+          key={index}
+          className="w-36 h-40 m-2 bg-gray-200 flex items-center justify-center rounded-md cursor-pointer"
+        >
+          <FontAwesomeIcon icon={faFileExcel} size="2x" />
+        </div>
+      );
+    } else {
+      return (
+        <div
+          key={index}
+          className="w-36 h-40 m-2 bg-gray-200 flex items-center justify-center rounded-md"
+        >
+          <span>File</span>
+        </div>
       );
     }
-    switch (Loginuser) {
-      case "user":
-        return <LoginButton onClick={handleSignOut}>Thoát</LoginButton>;
-      // case "admin":
-      //   return (
-      //     <Link href="/admin">
-      //       <LoginButton>Manage</LoginButton>
-      //     </Link>
-      //   );
-      default:
-        return (
-          <Link href="/login">
-            <LoginButton>Login</LoginButton>
-          </Link>
-        );
-    }
   };
-
   return (
-    <main className=" overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
+    <main className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
+      {/* Header */}
       <header className="fixed top-0 h-[50px] left-0 w-full border-b bg-white flex z-50 justify-center items-center">
         <nav className="flex justify-between items-center w-full max-w-4xl px-4">
           HOME
         </nav>
-        {/* {renderButton()} */}
       </header>
-      <div className="mt-[60px] w-9/10 sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-2/3">
-        <div className="flex flex-row">
-          <div className="flex flex-col">
-            <div className="text-gray-800 text-lg">
-              Hệ thống lưu trữ ảnh hoặc file
-            </div>
-            <div className="mb-4 text-sm text-gray-500">
-              Kích thước mỗi tệp tải lên tối đa 50 MB (tối đa 20 file trong 1
-              phút) <br></br>
-              Đã lưu trữ tổng cộng{" "}
-              <span className="text-cyan-600">{Total}</span> tệp <br></br>
-              IP của bạn：<span className="text-cyan-600">{IP}</span> <br></br>
-              Các định dạng hỗ trợ{" "}
-              <span image className="text-cyan-600">
-                image/*, video/*, .zip, .tar, .gz, .rar, .7z, .xz, .bz2, .pdf, .doc, .docx, .xls, .xlsx{" "}
-              </span>
-            </div>
-          </div>
-          <div className="flex  flex-col sm:flex-col   md:w-auto lg:flex-row xl:flex-row  2xl:flex-row  mx-auto items-center  ">
-            <span className=" text-lg sm:text-sm   md:text-sm lg:text-xl xl:text-xl  2xl:text-xl">
-              Máy chủ：
-            </span>
-            <select
-              value={selectedOption} // 将选择框的值绑定到状态中的 selectedOption
-              onChange={handleSelectChange} // Kích hoạt khi thay đổi giá trị ô chọn
-              className="text-lg p-2 border  rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto  2xl:w-36"
-            >
-              {/* <option value="tg">TG(会失效)</option> */}
-              <option value="tgchannel">TG</option>
-              {/* <option value="r2">R2</option> */}
-              <option value="vviptuangou">vviptuangou</option>
-              <option value="58img">58img</option>
-              {/* <option value="tencent">tencent</option> */}
-            </select>
-          </div>
-        </div>
+
+      {/* Main Content */}
+      <div className="mt-[60px] w-full max-w-5xl px-4">
+        {/* Drag & Drop Area */}
         <div
-          className="border-2 border-dashed border-slate-400 rounded-md relative"
+          className={`border-2 ${
+            dragging ? "border-blue-500 bg-blue-50" : "border-dashed border-gray-400"
+          } rounded-md p-6 mb-4`}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
           onPaste={handlePaste}
-          style={{ minHeight: calculateMinHeight() }} // Tính toán chiều cao tối thiểu động
         >
-          <div className="flex flex-wrap gap-3 min-h-[240px]">
-            <LoadingOverlay loading={uploading} />
-            {selectedFiles.map((file, index) => (
-              <div
-                key={index}
-                className="relative rounded-2xl w-44 h-48 ring-offset-2 ring-2  mx-3 my-3 flex flex-col items-center"
-              >
-                <div
-                  className="relative w-36 h-36 "
-                  onClick={() => handleImageClick(index)}
-                >
-                  {file.type.startsWith("image/") && (
-                    <Image
-                      src={URL.createObjectURL(file)}
-                      alt={`Preview ${file.name}`}
-                      fill={true}
-                    />
-                  )}
-                  {file.type.startsWith("video/") && (
-                    <video
-                      src={URL.createObjectURL(file)}
-                      controls
-                      className="w-full h-full"
-                    />
-                  )}
-                  {!file.type.startsWith("image/") &&
-                    !file.type.startsWith("video/") && (
-                      <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-700">
-                        <p>{file.name}</p>
-                      </div>
-                    )}
-                </div>
-                <div className="flex flex-row items-center  justify-center w-full mt-3">
-                  <button
-                    className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer mx-2"
-                    onClick={() => handleImageClick(index)}
-                  >
-                    <FontAwesomeIcon icon={faSearchPlus} />
-                  </button>
-                  <button
-                    className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer mx-2"
-                    onClick={() => handleRemoveImage(index)}
-                  >
-                    <FontAwesomeIcon icon={faTrashAlt} />
-                  </button>
-                  <button
-                    className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer mx-2"
-                    onClick={() => handleUpload(file)}
-                  >
-                    <FontAwesomeIcon icon={faUpload} />
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {selectedFiles.length === 0 && (
-              <div className="absolute -z-10 left-0 top-0 w-full h-full flex items-center justify-center">
-                <div className="text-gray-500">
-                  Kéo và thả tệp vào đây hoặc sao chép và dán ảnh chụp màn hình
-                  vào đây để tải lên
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="w-full rounded-md shadow-sm overflow-hidden mt-4 grid grid-cols-8">
-          <div className="md:col-span-1 col-span-8">
-            <label
-              htmlFor="file-upload"
-              className="w-full h-10 bg-blue-500 cursor-pointer flex items-center justify-center text-white"
-            >
-              <FontAwesomeIcon
-                icon={faImages}
-                style={{ width: "20px", height: "20px" }}
-                className="mr-2"
-              />
-              Chọn file
-            </label>
-            <input
-              id="file-upload"
-              type="file"
-              accept="image/*,video/*,.zip,.tar,.gz,.rar,.7z,.xz,.bz2,.pdf,.doc,.docx,.xls,.xlsx"
-              className="hidden"
-              onChange={handleFileChange}
-              multiple
-            />
-          </div>
-          <div className="md:col-span-5 col-span-8">
-            <div className="w-full h-10 bg-slate-200 leading-10 px-4 text-center md:text-left">
-              Đã chọn {selectedFiles.length} file，Dung lượng{" "}
-              {getTotalSizeInMB(selectedFiles)} MB
-            </div>
-          </div>
-          <div className="md:col-span-1 col-span-3">
-            <div
-              className="w-full bg-red-500 cursor-pointer h-10 flex items-center justify-center text-white"
-              onClick={handleClear}
-            >
-              <FontAwesomeIcon
-                icon={faTrashAlt}
-                style={{ width: "20px", height: "20px" }}
-                className="mr-2"
-              />
-              Xóa
-            </div>
-          </div>
-          <div className="md:col-span-1 col-span-5">
-            <div
-              className={`w-full bg-green-500 cursor-pointer h-10 flex items-center justify-center text-white ${
-                uploading ? "pointer-events-none opacity-50" : ""
-              }`}
-              // className={`bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer mx-2 ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-
-              onClick={() => handleUpload()}
-            >
-              <FontAwesomeIcon
-                icon={faUpload}
-                style={{ width: "20px", height: "20px" }}
-                className="mr-2"
-              />
-              Tải lên
-            </div>
-          </div>
-        </div>
-
-        <ToastContainer />
-        <div className="w-full mt-4 min-h-[200px] mb-[60px] ">
-          {uploadedImages.length > 0 && (
-            <>
-              <div className="flex flex-wrap gap-3 mb-4 border-b border-gray-300 ">
-                <button
-                  onClick={() => setActiveTab("preview")}
-                  className={`px-4 py-2 ${
-                    activeTab === "preview"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-800"
-                  }`}
-                >
-                  Preview
-                </button>
-                <button
-                  onClick={() => setActiveTab("htmlLinks")}
-                  className={`px-4 py-2 ${
-                    activeTab === "htmlLinks"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-800"
-                  }`}
-                >
-                  HTML
-                </button>
-                <button
-                  onClick={() => setActiveTab("markdownLinks")}
-                  className={`px-4 py-2 ${
-                    activeTab === "markdownLinks"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-800"
-                  }`}
-                >
-                  Markdown
-                </button>
-                <button
-                  onClick={() => setActiveTab("bbcodeLinks")}
-                  className={`px-4 py-2 ${
-                    activeTab === "bbcodeLinks"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-800"
-                  }`}
-                >
-                  BBCode
-                </button>
-                <button
-                  onClick={() => setActiveTab("viewLinks")}
-                  className={`px-4 py-2 ${
-                    activeTab === "viewLinks"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-800"
-                  }`}
-                >
-                  Links
-                </button>
-              </div>
-              {renderTabContent()}
-            </>
-          )}
-        </div>
-      </div>
-      {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          onClick={handleCloseImage}
-        >
-          <div className="relative flex flex-col items-center justify-between">
-            <button
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center"
-              onClick={handleCloseImage}
-            >
-              &times;
-            </button>
-
-            {boxType === "img" ? (
-              <img
-                src={selectedImage}
-                alt="Selected"
-                width={500}
-                height={500}
-                className="object-cover w-9/10  h-auto rounded-lg"
-              />
-            ) : boxType === "video" ? (
-              <video
-                src={selectedImage}
-                width={500}
-                height={500}
-                className="object-cover w-9/10  h-auto rounded-lg"
-                controls
-              />
-            ) : boxType === "other" ? (
-              // Bạn có thể render nội dung hoặc component khác tại đây
-              <div className="p-4 bg-white text-black rounded">
-                <p>Unsupported file type</p>
-              </div>
+          <div className="flex flex-wrap justify-center gap-4">
+            {selectedFiles.length > 0 ? (
+              selectedFiles.map((file, index) => renderFilePreview(file, index))
             ) : (
-              // Bạn có thể chọn nội dung mặc định hoặc trả về null
-              <div>Loại không xác định</div>
+              <div className="text-gray-400">
+                Kéo và thả file vào đây hoặc click để chọn file
+              </div>
             )}
           </div>
         </div>
-      )}
 
-      <div className="fixed inset-x-0 bottom-0 h-[50px] bg-slate-200  w-full  flex  z-50 justify-center items-center ">
+        {/* Upload Buttons */}
+        <div className="flex justify-center gap-4 mb-4">
+          <label
+            htmlFor="file-upload"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded cursor-pointer"
+          >
+            <FontAwesomeIcon icon={faImages} className="mr-2" />
+            Chọn file
+          </label>
+          <input
+            id="file-upload"
+            type="file"
+            multiple
+            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          <button
+            onClick={handleClear}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+          >
+            <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
+            Xóa
+          </button>
+
+          <button
+            onClick={handleUpload}
+            disabled={uploading}
+            className={`${
+              uploading ? "bg-green-300" : "bg-green-500 hover:bg-green-600"
+            } text-white px-4 py-2 rounded`}
+          >
+            <FontAwesomeIcon icon={faUpload} className="mr-2" />
+            {uploading ? "Đang tải..." : "Tải lên"}
+          </button>
+        </div>
+
+        {/* Tabs lọc file */}
+        <div className="flex justify-center gap-4 mb-6">
+          <button onClick={() => setActiveTab("all")} className={`px-4 py-2 rounded ${activeTab === "all" ? "bg-blue-500 text-white" : "bg-gray-200"}`}>
+            Tất cả
+          </button>
+          <button onClick={() => setActiveTab("image")} className={`px-4 py-2 rounded ${activeTab === "image" ? "bg-blue-500 text-white" : "bg-gray-200"}`}>
+            Ảnh
+          </button>
+          <button onClick={() => setActiveTab("video")} className={`px-4 py-2 rounded ${activeTab === "video" ? "bg-blue-500 text-white" : "bg-gray-200"}`}>
+            Video
+          </button>
+          <button onClick={() => setActiveTab("doc")} className={`px-4 py-2 rounded ${activeTab === "doc" ? "bg-blue-500 text-white" : "bg-gray-200"}`}>
+            Tài liệu
+          </button>
+        </div>
+
+        {/* Modal PDF Preview */}
+        {selectedPdf && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-4 rounded shadow-lg w-11/12 md:w-2/3 lg:w-1/2 relative">
+              <button
+                onClick={handleCloseImage}
+                className="absolute top-2 right-2 text-red-500"
+              >
+                ✖
+              </button>
+              <iframe src={selectedPdf} className="w-full h-[80vh]" />
+            </div>
+          </div>
+        )}
+
+        {/* Modal Image/Video */}
+        {selectedImage && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCloseImage}>
+            <div className="relative flex flex-col items-center justify-center">
+              {boxType === "img" && (
+                <img src={selectedImage} alt="Selected" className="object-contain max-w-full max-h-screen" />
+              )}
+              {boxType === "video" && (
+                <video src={selectedImage} controls className="object-contain max-w-full max-h-screen" />
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="fixed inset-x-0 bottom-0 h-[50px] bg-gray-200 flex justify-center items-center">
         <Footer />
       </div>
+
+      <ToastContainer />
     </main>
   );
 }
