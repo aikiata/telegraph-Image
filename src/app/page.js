@@ -29,14 +29,14 @@ export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedFilesNum, setUploadedFilesNum] = useState(0);
-  const [selectedImage, setSelectedImage] = useState(null); // Thêm trạng thái để theo dõi hình ảnh được phóng to
+  const [selectedImage, setSelectedImage] = useState(null); // 添加状态用于跟踪选中的放大图片
   const [activeTab, setActiveTab] = useState("preview");
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState("");
   const [Total, setTotal] = useState("?");
-  const [selectedOption, setSelectedOption] = useState("tgchannel"); // Giá trị chọn mặc định ban đầu
-  const [isAuthapi, setisAuthapi] = useState(false); // Giá trị chọn mặc định ban đầu
-  const [Loginuser, setLoginuser] = useState(""); // Giá trị chọn mặc định ban đầu
+  const [selectedOption, setSelectedOption] = useState("tgchannel"); // 初始选择第一个选项
+  const [isAuthapi, setisAuthapi] = useState(false); // 初始选择第一个选项
+  const [Loginuser, setLoginuser] = useState(""); // 初始选择第一个选项
   const [boxType, setBoxtype] = useState("img");
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -63,7 +63,7 @@ export default function Home() {
       const data = await res.json();
       setIP(data.ip);
     } catch (error) {
-      console.error("Lỗi yêu cầu:", error);
+      console.error("请求出错:", error);
     }
   };
   const isAuth = async () => {
@@ -84,7 +84,7 @@ export default function Home() {
         setSelectedOption("58img");
       }
     } catch (error) {
-      console.error("Lỗi yêu cầu:", error);
+      console.error("请求出错:", error);
     }
   };
 
@@ -99,7 +99,7 @@ export default function Home() {
       const data = await res.json();
       setTotal(data.total);
     } catch (error) {
-      console.error("Lỗi yêu cầu:", error);
+      console.error("请求出错:", error);
     }
   };
 
@@ -108,7 +108,7 @@ export default function Home() {
     const filteredFiles = Array.from(newFiles).filter(
       (file) => !selectedFiles.find((selFile) => selFile.name === file.name)
     );
-    // Lọc bỏ file đã tồn tại trong mảng uploadedImages
+    // 过滤掉已经在 uploadedImages 数组中存在的文件
     const uniqueFiles = filteredFiles.filter(
       (file) => !uploadedImages.find((upImg) => upImg.name === file.name)
     );
@@ -127,7 +127,7 @@ export default function Home() {
       (acc, file) => acc + file.size,
       0
     );
-    return (totalSizeInBytes / (1024 * 1024)).toFixed(2); // Chuyển đổi thành MB và giữ 2 chữ số thập phân
+    return (totalSizeInBytes / (1024 * 1024)).toFixed(2); // 转换为MB并保留两位小数
   };
 
   const handleUpload = async (file = null) => {
@@ -200,10 +200,10 @@ export default function Home() {
             let errorMsg;
             try {
               const errorData = await response.json();
-              errorMsg = errorData.message || `Tải lên ${file.name} lỗi khi tải ảnh`;
+              errorMsg = errorData.message || `上传 ${file.name} 图片时出错`;
             } catch (jsonError) {
               // 如果解析 JSON 失败，使用默认错误信息
-              errorMsg = `Tải lên ${file.name} xảy ra lỗi không xác định khi tải ảnh`;
+              errorMsg = `上传 ${file.name} 图片时发生未知错误`;
             }
 
             // 细化状态码处理
@@ -252,7 +252,7 @@ export default function Home() {
       if (item.kind === "file" && item.type.includes("image")) {
         const file = item.getAsFile();
         setSelectedFiles([...selectedFiles, file]);
-        break; // Chỉ xử lý file đầu tiên
+        break; // 只处理第一个文件
       }
     }
   };
@@ -279,7 +279,7 @@ export default function Home() {
     return `${rows * 100}px`;
   };
 
-  // Xử lý sự kiện click vào ảnh để phóng to
+  // 处理点击图片放大
   const handleImageClick = (index) => {
     if (selectedFiles[index].type.startsWith("image/")) {
       setBoxtype("img");
@@ -304,7 +304,7 @@ export default function Home() {
   const handleCopy = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-      // alert('Đã sao chép thành công vào clipboard');
+      // alert('已成功复制到剪贴板');
       toast.success(`Đã sao chép liên kết`);
     } catch (err) {
       toast.error("Lỗi sao chép liên kết");
@@ -352,7 +352,7 @@ export default function Home() {
         </video>
       );
     } else {
-      // Các loại file khác
+      // 其他文件类型
       return (
         <img
           key={`image-${index}`}
@@ -470,7 +470,7 @@ export default function Home() {
   };
 
   const handleSelectChange = (e) => {
-    setSelectedOption(e.target.value); // Cập nhật giá trị ô lựa chọn
+    setSelectedOption(e.target.value); // 更新选择框的值
   };
 
   const handleSignOut = () => {
@@ -552,7 +552,7 @@ export default function Home() {
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onPaste={handlePaste}
-          style={{ minHeight: calculateMinHeight() }} // Thiết lập chiều cao tối thiểu động
+          style={{ minHeight: calculateMinHeight() }} // 动态设置最小高度
         >
           <div className="flex flex-wrap gap-3 min-h-[240px]">
             <LoadingOverlay loading={uploading} />
@@ -770,13 +770,13 @@ export default function Home() {
                 controls
               />
             ) : boxType === "other" ? (
-              // Bạn có thể render các nội dung hoặc thành phần khác tại đây
+              // 这里可以渲染你想要的其他内容或组件
               <div className="p-4 bg-white text-black rounded">
                 <p>Unsupported file type</p>
               </div>
             ) : (
-              // Bạn có thể chọn nội dung mặc định hoặc trả về null
-              <div>Loại không xác định</div>
+              // 你可以选择一个默认的内容或者返回 null
+              <div>未知类型</div>
             )}
           </div>
         </div>
