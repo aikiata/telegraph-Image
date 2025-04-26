@@ -505,7 +505,7 @@ export default function Home() {
               IP của bạn：<span className="text-cyan-600">{IP}</span> <br></br>
               Các định dạng hỗ trợ{" "}
               <span image className="text-cyan-600">
-                image/*, video/*, .zip, .tar, .gz, .rar, .7z, .xz, .bz2{" "}
+                image/*, video/*, .zip, .tar, .gz, .rar, .7z, .xz, .bz2, .pdf, .doc, .docx, .xls, .xlsx{" "}
               </span>
             </div>
           </div>
@@ -615,7 +615,7 @@ export default function Home() {
             <input
               id="file-upload"
               type="file"
-              accept="image/*,video/*,.zip,.tar,.gz,.rar,.7z,.xz,.bz2"
+              accept="image/*,video/*,.zip,.tar,.gz,.rar,.7z,.xz,.bz2,.pdf,.doc,.docx,.xls,.xlsx"
               className="hidden"
               onChange={handleFileChange}
               multiple
